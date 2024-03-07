@@ -3,8 +3,10 @@
 #ifdef _WIN32
 #include <Windows.h>
 #elif defined(__APPLE__)
+#include <TargetConditionals.h>
 #include <mach/mach.h>
 #include <thread>
+#include <signal.h>
 #elif defined(__unix__)
 #include <signal.h>
 #endif
@@ -43,7 +45,7 @@ private:
 	LONG HandleExceptionInternal(_EXCEPTION_POINTERS*);
 
 	LPVOID m_handler = NULL;
-#elif defined(__unix__) || defined(__ANDROID__)
+#elif defined(__unix__) || defined(__ANDROID__) || TARGET_OS_TV
 	static void HandleException(int, siginfo_t*, void*);
 	void HandleExceptionInternal(int, siginfo_t*, void*);
 #elif defined(__APPLE__)

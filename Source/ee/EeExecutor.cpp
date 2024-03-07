@@ -52,7 +52,7 @@ void CEeExecutor::AddExceptionHandler()
 #if defined(_WIN32)
 	m_handler = AddVectoredExceptionHandler(TRUE, &CEeExecutor::HandleException);
 	assert(m_handler != NULL);
-#elif defined(__unix__) || defined(__ANDROID__)
+#elif defined(__unix__) || defined(__ANDROID__) || TARGET_OS_TV
 	struct sigaction sigAction;
 	sigAction.sa_handler = nullptr;
 	sigAction.sa_sigaction = &HandleException;
@@ -60,7 +60,7 @@ void CEeExecutor::AddExceptionHandler()
 	sigemptyset(&sigAction.sa_mask);
 	int result = sigaction(SIGSEGV, &sigAction, nullptr);
 	assert(result >= 0);
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && !TARGET_OS_TV
 	if(!m_running)
 	{
 		kern_return_t result = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &m_port);
@@ -80,7 +80,7 @@ void CEeExecutor::RemoveExceptionHandler()
 
 #if defined(_WIN32)
 	RemoveVectoredExceptionHandler(m_handler);
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && !TARGET_OS_TV
 	m_running = false;
 	m_handlerThread.join();
 #endif
@@ -93,7 +93,7 @@ void CEeExecutor::RemoveExceptionHandler()
 void CEeExecutor::AttachExceptionHandlerToThread()
 {
 	//Only necessary for macOS and iOS since the handler is set on a thread basis
-#if defined(__APPLE__)
+#if defined(__APPLE__) && !TARGET_OS_TV
 	assert(m_running);
 
 	auto result = mach_port_insert_right(mach_task_self(), m_port, m_port, MACH_MSG_TYPE_MAKE_SEND);
@@ -233,7 +233,7 @@ LONG CEeExecutor::HandleExceptionInternal(_EXCEPTION_POINTERS* exceptionInfo)
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
-#elif defined(__unix__) || defined(__ANDROID__)
+#elif defined(__unix__) || defined(__ANDROID__) || TARGET_OS_TV
 
 void CEeExecutor::HandleException(int sigId, siginfo_t* sigInfo, void* baseContext)
 {
